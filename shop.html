@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>หน้าร้านค้าออนไลน์ | Web E-commerce Storefront</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              light: '#FAF6F0',
+              DEFAULT: '#8C5A3C',
+              hover: '#6E462E',
+              dark: '#523321'
+            }
+          },
+          borderRadius: {
+            '2xl': '16px'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Sarabun:wght@300;400;600;750&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <!-- Supabase JS Client Global SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
+
+  <style>
+    body {
+      font-family: 'Sarabun', sans-serif;
+    }
+    .font-bookish {
+      font-family: 'Lora', 'Sarabun', serif;
+    }
+  </style>
+</head>
+<body class="bg-stone-50 dark:bg-zinc-900 text-stone-800 dark:text-stone-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- Header -->
+  <header class="bg-white dark:bg-zinc-800 shadow-sm sticky top-0 z-40 border-b border-stone-100 dark:border-zinc-700">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary-light dark:bg-zinc-900 rounded-xl flex items-center justify-center text-primary dark:text-amber-500 shadow-sm border border-primary/10">
+          <i class="fas fa-book-open text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold font-bookish tracking-tight text-stone-950 dark:text-white">ร้านหนังสือรัตน์ (Ratt Bookstore)</h1>
+          <p class="text-xs text-stone-400 dark:text-stone-300">ระบบคลังหน้าร้านหนังสือซิงค์ตรง ERP ZORT</p>
+        </div>
+      </div>
+      
+      <!-- Action buttons -->
+      <div class="flex items-center gap-3">
+        <button id="config-btn" onclick="openConfigModal()" class="w-9 h-9 bg-stone-100 dark:bg-zinc-700 hover:bg-stone-200 text-stone-650 dark:text-stone-200 flex items-center justify-center rounded-xl transition" title="ตั้งค่าเชื่อมต่อ Supabase">
+          <i class="fas fa-cog text-sm"></i>
+        </button>
+        <button id="theme-toggle-btn" onclick="toggleTheme()" class="w-9 h-9 bg-stone-100 dark:bg-zinc-700 hover:bg-stone-200 text-stone-650 dark:text-stone-200 flex items-center justify-center rounded-xl transition" title="สลับธีม มืด/สว่าง">
+          <i class="fas fa-moon dark:hidden"></i>
+          <i class="fas fa-sun hidden dark:block text-amber-400"></i>
+        </button>
+        <!-- Cart Button -->
+        <button onclick="openCartDrawer()" class="relative w-9 h-9 bg-primary text-white flex items-center justify-center rounded-xl transition hover:bg-primary-hover shadow" title="ตะกร้าสินค้า">
+          <i class="fas fa-shopping-basket text-sm"></i>
+          <span id="cart-badge" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner Hero -->
+  <section class="bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 text-white py-12 px-4 shadow-inner relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#8C5A3C_1px,transparent_1px)] [background-size:20px_20px]"></div>
+    <div class="max-w-6xl mx-auto relative z-10 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-6">
+      <div class="space-y-3">
+        <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-500/30 font-bookish"><i class="fas fa-feather-alt mr-1"></i> RATT BOOKSTORE LIVE SYNC</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold font-bookish tracking-wide text-amber-100">ศูนย์รวมหนังสือและวรรณกรรมคัดสรร</h2>
+        <p class="text-sm text-stone-300 max-w-xl leading-relaxed">ค้นพบจิตวิญญาณแห่งตัวอักษร วรรณกรรมสร้างสรรค์ และตำราวิชาการ พร้อมระบบเชื่อมต่อข้อมูลแบบเรียลไทม์ ซิงค์โดยตรงกับระบบคลังหลัก ERP ZORT</p>
+      </div>
+      <div class="flex items-center gap-4 bg-black/30 p-4 rounded-2xl backdrop-blur-sm self-stretch sm:self-auto justify-center sm:justify-start">
+        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+          <i class="fas fa-sync text-xl text-amber-400 animate-spin" style="animation-duration: 4s;"></i>
+        </div>
+        <div class="text-left text-xs">
+          <span class="block text-stone-400 text-[10px] font-bold uppercase tracking-wider">สถานะซิงค์ข้อมูล</span>
+          <span class="font-bold flex items-center gap-1.5" id="sync-indicator">
+            <span class="w-2.5 h-2.5 rounded-full bg-stone-500 inline-block animate-ping"></span>
+            เชื่อมต่อภายนอกไม่สำเร็จ
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Section -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8 flex flex-col md:flex-row gap-6">
+
+    <!-- Sidebar / Filters -->
+    <aside class="w-full md:w-64 shrink-0 flex flex-col gap-6">
+      <div class="bg-white dark:bg-zinc-800 p-5 rounded-2xl border border-stone-100 dark:border-zinc-700 shadow-sm space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-stone-400 uppercase mb-2 tracking-wider">ค้นหาหนังสือ</label>
+          <div class="relative">
+            <input type="text" id="search-input" oninput="filterProducts()" placeholder="ชื่อหนังสือ, ผู้เขียน, SKU..." class="w-full p-3 pl-10 text-sm border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-750 transition focus:outline-none focus:ring-1 focus:ring-primary">
+            <i class="fas fa-search absolute left-3.5 top-3.5 text-stone-400 text-sm"></i>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-stone-400 uppercase mb-2 tracking-wider">หมวดหมู่หนังสือ</label>
+          <div class="flex flex-col gap-1.5" id="category-filter-list">
+            <button onclick="selectCategory('all')" class="text-left py-2 px-3 text-sm font-semibold rounded-lg bg-primary/10 text-primary w-full transition flex items-center justify-between" id="cat-btn-all">
+              <span>หนังสือทั้งหมด</span>
+              <span class="text-xs bg-primary/20 text-primary font-bold px-2 py-0.5 rounded-md" id="cat-count-all">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-stone-400 uppercase mb-2 tracking-wider">สถานะจำหน่าย</label>
+          <div class="flex flex-col gap-1.5 text-sm">
+            <label class="flex items-center gap-2.5 p-1 cursor-pointer select-none">
+              <input type="checkbox" id="filter-instock" checked onchange="filterProducts()" class="rounded text-primary focus:ring-primary w-4.5 h-4.5">
+              <span>พร้อมส่ง</span>
+            </label>
+            <label class="flex items-center gap-2.5 p-1 cursor-pointer select-none">
+              <input type="checkbox" id="filter-outofstock" checked onchange="filterProducts()" class="rounded text-primary focus:ring-primary w-4.5 h-4.5">
+              <span>หมดชั่วคราว</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-stone-400 uppercase mb-2 tracking-wider">ช่วงราคา (บาท)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="filter-min-price" oninput="filterProducts()" placeholder="ต่ำสุด" class="w-full p-2.5 text-xs border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-750 transition focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+            <input type="number" id="filter-max-price" oninput="filterProducts()" placeholder="สูงสุด" class="w-full p-2.5 text-xs border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-750 transition focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Product Grid section -->
+    <section class="flex-grow">
+      
+      <!-- Loaded Status Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-sm font-bold text-stone-400"><span id="product-count-display" class="text-stone-600 dark:text-amber-500 font-extrabold">0</span> เล่มที่จดทะเบียน</h3>
+        <button onclick="loadProducts()" class="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1.5 p-2 px-3.5 bg-white dark:bg-zinc-800 rounded-xl border border-stone-200 dark:border-zinc-700 shadow-sm transition">
+          <i class="fas fa-sync-alt"></i> อัปเดตชั้นหนังสือ
+        </button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div id="loading-spinner" class="py-20 flex flex-col items-center justify-center gap-3">
+        <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs text-stone-400 font-semibold">กำลังจัดทำข้อมูลหนังสือเรียลไทม์จากฐานข้อมูล Supabase...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-2xl p-16 text-center shadow-sm space-y-4">
+        <div class="w-16 h-16 bg-stone-100 dark:bg-zinc-900 rounded-full mx-auto flex items-center justify-center text-stone-400 dark:text-stone-300">
+          <i class="fas fa-book-reader text-2xl"></i>
+        </div>
+        <div class="space-y-2">
+          <h4 class="font-bold text-stone-900 dark:text-white font-bookish text-lg">ไม่พบหนังสือพร้อมจำหน่าย</h4>
+          <p class="text-xs text-stone-400 max-w-sm mx-auto" id="empty-state-desc">ยังไม่มีการเพิ่มรายการหนังสือ หรือยังไม่เชื่อมต่อคีย์โครงการเพื่อแสดงผล</p>
+        </div>
+        <button onclick="openConfigModal()" class="px-5 py-2.5 bg-primary text-white hover:bg-primary-hover rounded-xl text-xs font-semibold shadow transition">
+          ตั้งค่าการเชื่อมต่อ
+        </button>
+      </div>
+
+      <!-- Dynamic Grid -->
+      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+      
+    </section>
+  </main>
+
+  <!-- PRODUCT DETAIL MODAL -->
+  <dialog id="product-detail-modal" class="fixed inset-0 z-50 overflow-hidden bg-black/60 flex items-center justify-center p-4 w-full h-full hidden">
+    <div class="bg-white dark:bg-zinc-800 rounded-2xl max-w-2xl w-full p-6 space-y-6 shadow-xl border border-stone-150 dark:border-zinc-700 flex flex-col md:flex-row gap-6 relative animate-zoomIn">
+      <!-- Close Button -->
+      <button onclick="closeProductModal()" class="absolute right-4 top-4 text-stone-400 hover:text-stone-600 dark:hover:text-white z-10 text-xl transition">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <!-- Images Drawer -->
+      <div class="w-full md:w-1/2 flex flex-col gap-3">
+        <div class="aspect-[3/4] bg-stone-50 dark:bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center border border-stone-200 dark:border-zinc-700 shadow-sm relative after:content-[''] after:absolute after:top-0 after:left-0 after:bottom-0 after:w-2 after:bg-gradient-to-r after:from-black/15 after:to-transparent after:pointer-events-none">
+          <img id="modal-img-main" src="" alt="Main Product Image" class="w-full h-full object-cover">
+        </div>
+        <div id="modal-img-thumbs" class="grid grid-cols-4 gap-2"></div>
+      </div>
+
+      <!-- Details Drawer -->
+      <div class="flex-grow space-y-4 text-left">
+        <div>
+          <span id="modal-stock-badge" class="px-2.5 py-0.5 text-[9px] font-bold rounded-md uppercase tracking-wider"></span>
+          <h2 id="modal-title" class="font-extrabold text-xl mt-1.5 text-stone-900 dark:text-white leading-snug font-bookish"></h2>
+          <span class="text-xs text-stone-400">ISBN / SKU: <code id="modal-sku" class="font-bold text-stone-600 dark:text-stone-300"></code></span>
+        </div>
+
+        <div class="flex items-baseline gap-2 py-2 border-y border-stone-100 dark:border-zinc-700">
+          <span class="text-xs text-stone-400">ราคาเล่มละ: </span>
+          <span id="modal-price" class="text-2xl font-black text-primary dark:text-amber-500"></span>
+          <span class="text-xs text-stone-400 font-semibold">บาท</span>
+        </div>
+
+        <div>
+          <span class="block text-xs font-bold text-stone-450 mb-1.5 tracking-wide">คลังและสถานะการจำหน่าย</span>
+          <div class="flex items-center gap-3">
+            <div class="bg-stone-50 dark:bg-zinc-900 p-2.5 px-4 rounded-xl border border-stone-150 dark:border-zinc-750 text-center flex-1">
+              <span class="block text-[9px] text-stone-450 uppercase font-semibold">จำนวนหนังสือพร้อมส่ง</span>
+              <span id="modal-stock-qty" class="text-lg font-bold text-stone-800 dark:text-white"></span>
+            </div>
+            <div class="bg-stone-50 dark:bg-zinc-900 p-2.5 px-4 rounded-xl border border-stone-150 dark:border-zinc-750 text-center flex-1">
+              <span class="block text-[9px] text-stone-450 uppercase font-semibold">ควบคุมคลัง ZORT</span>
+              <span id="modal-manage-stock" class="text-xs font-bold block mt-1"></span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="block text-xs font-bold text-stone-450 mb-1 tracking-wide">รายละเอียดหนังสือ / เรื่องย่อ</span>
+          <div id="modal-desc" class="text-xs text-stone-500 dark:text-stone-300 max-h-36 overflow-y-auto leading-relaxed"></div>
+        </div>
+
+        <div id="modal-dimensions-container" class="hidden">
+          <span class="block text-xs font-bold text-stone-450 mb-1 tracking-wide">มิติ & ขนาดของรูปเล่ม</span>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-stone-50 dark:bg-zinc-900 p-2 rounded-lg border border-stone-100 dark:border-zinc-750">
+              <span class="text-[9px] text-stone-400 block font-semibold">ความหนา</span>
+              <span id="modal-len" class="font-bold"></span>
+            </div>
+            <div class="bg-stone-50 dark:bg-zinc-900 p-2 rounded-lg border border-stone-100 dark:border-zinc-750">
+              <span class="text-[9px] text-stone-400 block font-semibold">กว้าง</span>
+              <span id="modal-width" class="font-bold"></span>
+            </div>
+            <div class="bg-stone-50 dark:bg-zinc-900 p-2 rounded-lg border border-stone-100 dark:border-zinc-750">
+              <span class="text-[9px] text-stone-400 block font-semibold">สูง</span>
+              <span id="modal-height" class="font-bold"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add to Cart in Modal -->
+        <div class="flex gap-3 pt-2">
+          <div class="flex items-center border border-stone-200 dark:border-zinc-700 rounded-xl overflow-hidden">
+            <button onclick="changeModalQty(-1)" class="w-9 h-10 flex items-center justify-center text-stone-500 hover:bg-stone-100 dark:hover:bg-zinc-700 font-bold text-lg transition">−</button>
+            <input type="number" id="modal-qty" value="1" min="1" class="w-12 h-10 text-center text-sm font-bold bg-transparent border-0 focus:outline-none text-stone-800 dark:text-white">
+            <button onclick="changeModalQty(1)" class="w-9 h-10 flex items-center justify-center text-stone-500 hover:bg-stone-100 dark:hover:bg-zinc-700 font-bold text-lg transition">+</button>
+          </div>
+          <button onclick="addToCartFromModal()" class="flex-1 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl transition flex items-center justify-center gap-2 text-sm shadow">
+            <i class="fas fa-cart-plus"></i> เพิ่มลงตะกร้า
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </dialog>
+
+  <!-- DATABASE CONFIG MODAL -->
+  <dialog id="config-modal" class="fixed inset-0 z-50 overflow-hidden bg-black/60 flex items-center justify-center p-4 w-full h-full hidden">
+    <div class="bg-white dark:bg-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-stone-100 dark:border-zinc-700 relative">
+      <button onclick="closeConfigModal()" class="absolute right-4 top-4 text-stone-400 hover:text-stone-600 dark:hover:text-white transition">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="flex items-center gap-2.5 border-b border-stone-100 dark:border-zinc-700 pb-2">
+        <i class="fas fa-database text-primary dark:text-amber-500 text-xl"></i>
+        <h3 class="font-bold text-md text-stone-900 dark:text-white">เชื่อมต่อโครงการ Supabase</h3>
+      </div>
+      
+      <p class="text-xs text-stone-400 leading-relaxed">กรุณาระบุข้อมูลกุญแจ API คีย์สาธารณะเพื่อสืบค้นเรียกรายการสินค้าจากฐานข้อมูล Supabase ที่ระบบ Emulator เขียนบันทึกเข้ามา</p>
+
+      <div class="space-y-3 pt-2 text-sm">
+        <div>
+          <label class="block font-semibold mb-1" for="db-url">Supabase URL</label>
+          <input type="text" id="db-url" placeholder="https://xxxxxxxxx.supabase.co" class="w-full p-3 border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-750 transition focus:outline-none focus:ring-1 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1" for="db-key">Supabase Public Anon Key</label>
+          <input type="text" id="db-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC..." class="w-full p-3 border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-750 transition focus:outline-none focus:ring-1 focus:ring-primary">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-stone-100 dark:border-zinc-700 text-sm font-semibold">
+        <button type="button" onclick="closeConfigModal()" class="p-2.5 px-4 border rounded-xl hover:bg-stone-50 transition text-stone-750 dark:text-stone-300 dark:hover:bg-zinc-700">ยกเลิก</button>
+        <button type="button" onclick="saveConfig()" class="p-2.5 px-5 bg-primary text-white hover:bg-primary-hover rounded-xl shadow transition">บันทึกและเชื่อมต่อ</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- CART DRAWER -->
+  <div id="cart-overlay" onclick="closeCartDrawer()" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
+  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white dark:bg-zinc-900 z-50 shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-zinc-700">
+      <h2 class="font-bold text-stone-900 dark:text-white flex items-center gap-2"><i class="fas fa-shopping-cart text-primary"></i> ตะกร้าสินค้า</h2>
+      <button onclick="closeCartDrawer()" class="text-stone-400 hover:text-stone-700 dark:hover:text-white transition text-xl"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="cart-items-list" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+    <div class="border-t border-stone-100 dark:border-zinc-700 px-5 py-4 space-y-3">
+      <div class="flex justify-between text-sm font-bold">
+        <span class="text-stone-500">ยอดรวมสุทธิ</span>
+        <span class="text-primary dark:text-amber-500 text-lg" id="cart-total-display">฿0</span>
+      </div>
+      <button onclick="openCheckout()" id="checkout-btn" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+        <i class="fas fa-shopping-bag"></i> แนบรายการสั่งจอง
+      </button>
+    </div>
+  </aside>
+
+  <!-- CHECKOUT MODAL -->
+  <div id="checkout-modal" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-stone-100 dark:border-zinc-700 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeCheckout()" class="absolute right-4 top-4 text-stone-400 hover:text-stone-700 dark:hover:text-white text-xl transition"><i class="fas fa-times"></i></button>
+      <div id="checkout-form-section">
+        <h2 class="font-extrabold text-lg text-stone-900 dark:text-white mb-4 flex items-center gap-2 font-bookish"><i class="fas fa-book text-primary"></i> ข้อมูลและที่อยู่สำหรับจัดส่งหนังสือ</h2>
+        <div class="space-y-3 text-sm">
+          <div>
+            <label class="block font-semibold mb-1 text-stone-700 dark:text-stone-300">ชื่อ-นามสกุลผู้รับ *</label>
+            <input id="co-name" type="text" placeholder="ระบุชื่อและนามสกุลของคุณ" class="w-full p-3 border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-primary transition">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-stone-700 dark:text-stone-300">เบอร์โทรศัพท์ติดต่อ *</label>
+            <input id="co-phone" type="tel" placeholder="08x-xxx-xxxx" class="w-full p-3 border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-primary transition">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-stone-700 dark:text-stone-300">ที่อยู่ในการจัดส่งหนังสือ *</label>
+            <textarea id="co-address" rows="3" placeholder="บ้านเลขที่ / ถนน / ซอย / ตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์" class="w-full p-3 border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-primary transition resize-none"></textarea>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-stone-700 dark:text-stone-300">หมายเหตุเพิ่มเติมถึงร้านค้า</label>
+            <input id="co-note" type="text" placeholder="คำสั่งการแพ็คพิเศษ หรือรายละเอียดการติดต่ออื่นๆ" class="w-full p-3 border rounded-xl bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-primary transition">
+          </div>
+        </div>
+        <!-- Order Summary -->
+        <div class="mt-4 bg-stone-50 dark:bg-zinc-900 border border-stone-100 dark:border-zinc-700 rounded-xl p-4 space-y-2 text-sm">
+          <p class="font-bold text-stone-700 dark:text-stone-300 text-xs uppercase tracking-wider mb-2 font-bookish">สรุปรายละเอียดหนังสือที่สั่งซื้อ</p>
+          <div id="co-summary-items" class="space-y-1"></div>
+          <div class="border-t border-stone-200 dark:border-zinc-700 pt-2 flex justify-between font-extrabold text-base">
+            <span>ยอดชำระเงินรวม</span>
+            <span class="text-primary dark:text-amber-500 font-bookish" id="co-total-display">฿0</span>
+          </div>
+        </div>
+        <p id="co-error" class="text-red-500 text-xs mt-2 hidden"></p>
+        <button onclick="submitOrder()" id="co-submit-btn" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+          <i class="fas fa-check-circle"></i> ยืนยันคำสั่งซื้อหนังสือ
+        </button>
+      </div>
+      <!-- Success Screen -->
+      <div id="checkout-success-section" class="hidden text-center py-8 space-y-4">
+        <div class="w-16 h-16 bg-emerald-105 dark:bg-emerald-900 rounded-full mx-auto flex items-center justify-center">
+          <i class="fas fa-check text-emerald-600 dark:text-emerald-400 text-3xl"></i>
+        </div>
+        <h3 class="font-extrabold text-xl text-stone-900 dark:text-white font-bookish">สั่งซื้อหนังสือสำเร็จ!</h3>
+        <p class="text-stone-500 dark:text-stone-400 text-sm">เลขที่เอกสารการจองคลังคำสั่งซื้อ:</p>
+        <p id="co-order-number" class="font-black text-primary dark:text-amber-500 text-2xl font-bookish"></p>
+        <p class="text-xs text-stone-400">ร้านหนังสือรัตน์จะดำเนินการตรวจสอบ และติดต่อเพื่อจัดส่งโดยเร็วและปลอดภัย</p>
+        <button onclick="closeCheckout()" class="mt-4 px-8 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl transition shadow">ปิดรับทราบข้อมูล</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-zinc-800 border-t border-stone-150 dark:border-zinc-750 py-6 text-center text-xs text-stone-450 mt-12 transition-colors">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>© 2026 ร้านหนังสือรัตน์ (Ratt Bookstore) - สงวนลิขสิทธิ์ทั้งหมด</p>
+      <p class="text-stone-400">ระบบคลังหน้าร้านหนังสือซิงค์ตรงระบบ ERP ZORT อัตโนมัติ</p>
+    </div>
+  </footer>
+
+  <script>
+    let supabaseClient = null;
+    let productsRealtimeChannel = null;
+    let productsReloadTimer = null;
+    let localProducts = [];
+    let activeCategory = 'all';
+    
+    const SUPABASE_URL_KEY = 'zort_ws_supabase_url';
+    const SUPABASE_ANON_KEY = 'zort_ws_supabase_anon_key';
+
+    // Dark/Light Theme System
+    function initTheme() {
+      const isDark = localStorage.getItem('theme') === 'dark' || 
+                    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    // Modal control
+    function openConfigModal() {
+      document.getElementById('db-url').value = localStorage.getItem(SUPABASE_URL_KEY) || '';
+      document.getElementById('db-key').value = localStorage.getItem(SUPABASE_ANON_KEY) || '';
+      document.getElementById('config-modal').classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      document.getElementById('config-modal').classList.add('hidden');
+    }
+
+    function saveConfig() {
+      const url = document.getElementById('db-url').value.trim();
+      const key = document.getElementById('db-key').value.trim();
+      
+      if (url && key) {
+        localStorage.setItem(SUPABASE_URL_KEY, url);
+        localStorage.setItem(SUPABASE_ANON_KEY, key);
+        closeConfigModal();
+        initSupabase();
+        loadProducts();
+      } else {
+        alert('กรุณากรอกข้อมูลเชื่อมต่อให้ครบถ้วน');
+      }
+    }
+
+    // Initialize Supabase Client
+    function cleanupRealtimeSubscription() {
+      if (productsRealtimeChannel && supabaseClient) {
+        supabaseClient.removeChannel(productsRealtimeChannel);
+      }
+      productsRealtimeChannel = null;
+    }
+
+    function scheduleRealtimeReload(reason) {
+      clearTimeout(productsReloadTimer);
+      productsReloadTimer = setTimeout(() => {
+        console.log('Realtime products refresh triggered:', reason);
+        loadProducts();
+      }, 300);
+    }
+
+    function subscribeProductsRealtime() {
+      if (!supabaseClient) return;
+
+      cleanupRealtimeSubscription();
+      productsRealtimeChannel = supabaseClient
+        .channel('storefront-products-realtime')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        }, payload => {
+          console.log('Products realtime payload:', payload);
+          scheduleRealtimeReload(payload.eventType || 'unknown');
+        })
+        .subscribe((status) => {
+          console.log('Products realtime status:', status);
+        });
+    }
+
+    function initSupabase() {
+      const url = localStorage.getItem(SUPABASE_URL_KEY);
+      const key = localStorage.getItem(SUPABASE_ANON_KEY);
+      const indicator = document.getElementById('sync-indicator');
+      cleanupRealtimeSubscription();
+
+      if (url && key && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(url, key);
+          subscribeProductsRealtime();
+          indicator.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-ping"></span> ดำเนินการเชื่อมต่อสำเร็จ';
+          indicator.className = 'font-bold flex items-center gap-1.5 text-emerald-500';
+          console.log('Supabase initialized in Storefront.');
+          return true;
+        } catch (error) {
+          console.error('Failed to init Supabase:', error);
+        }
+      }
+      
+      indicator.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> รอการตั้งค่าโครงการ';
+      indicator.className = 'font-bold flex items-center gap-1.5 text-amber-500';
+      supabaseClient = null;
+      return false;
+    }
+
+    // Load products from Supabase
+    async function loadProducts() {
+      const spinner = document.getElementById('loading-spinner');
+      const grid = document.getElementById('products-grid');
+      const empty = document.getElementById('empty-state');
+      
+      spinner.classList.remove('hidden');
+      grid.classList.add('hidden');
+      empty.classList.add('hidden');
+
+      if (!supabaseClient) {
+        spinner.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('empty-state-desc').innerHTML = 'กรุณากรอกข้อมูลในการเชื่อมต่อ Supabase URL และ Key เพื่อดึงรายการตัวบ่งชี้สินค้า';
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('products')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (error) throw error;
+
+        localProducts = data || [];
+        spinner.classList.add('hidden');
+        
+        if (localProducts.length === 0) {
+          empty.classList.remove('hidden');
+          document.getElementById('empty-state-desc').innerHTML = 'ยังไม่พบสินค้าในระบบ กรุณารันสคริปต์จำลอง sync ข้อมูล (`npm run test`) หรือต่อพอร์ต ZORT เพื่ออัปโหลดสินค้า';
+        } else {
+          grid.classList.remove('hidden');
+          renderCategories();
+          filterProducts();
+        }
+      } catch (err) {
+        console.error('Error fetching catalog products:', err);
+        spinner.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('empty-state-desc').innerHTML = 'ไม่สามารถดึงข้อมูลได้: ' + err.message;
+      }
+    }
+
+    // Render Categories checklist helper
+    function renderCategories() {
+      const catsEl = document.getElementById('category-filter-list');
+      
+      catsEl.innerHTML = `
+        <button onclick="selectCategory('all')" class="text-left py-2 px-3 text-sm font-semibold rounded-lg w-full transition flex items-center justify-between ${activeCategory === 'all' ? 'bg-primary/10 text-primary' : 'hover:bg-stone-100 dark:hover:bg-zinc-700'}" id="cat-btn-all">
+          <span>ทั้งหมด (ทุกหมวดหมู่)</span>
+          <span class="text-xs bg-stone-200 dark:bg-zinc-900 font-bold px-2 py-0.5 rounded-md text-stone-600 dark:text-stone-300" id="cat-count-all">${localProducts.length}</span>
+        </button>
+      `;
+
+      // Extract unique categories names
+      const categoriesMap = {};
+      localProducts.forEach(prod => {
+        const cats = typeof prod.categories === 'string' ? JSON.parse(prod.categories) : (prod.categories || []);
+        cats.forEach(c => {
+          if (c && c.name) {
+            categoriesMap[c.name] = (categoriesMap[c.name] || 0) + 1;
+          }
+        });
+      });
+
+      Object.keys(categoriesMap).forEach(catName => {
+        const count = categoriesMap[catName];
+        const isSelected = activeCategory === catName;
+        const btnHtml = `
+          <button onclick="selectCategory('${catName}')" class="text-left py-2 px-3 text-sm font-semibold rounded-lg w-full transition flex items-center justify-between ${isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-stone-100 dark:hover:bg-zinc-700'}" id="cat-btn-${catName}">
+            <span class="truncate pr-2">${catName}</span>
+            <span class="text-xs bg-stone-200 dark:bg-zinc-900 font-bold px-2 py-0.5 rounded-md text-stone-600 dark:text-stone-300">${count}</span>
+          </button>
+        `;
+        catsEl.innerHTML += btnHtml;
+      });
+    }
+
+    function selectCategory(category) {
+      activeCategory = category;
+      renderCategories();
+      filterProducts();
+    }
+
+    // Filter, search & status checks
+    function filterProducts() {
+      const search = document.getElementById('search-input').value.toLowerCase().trim();
+      const showInStock = document.getElementById('filter-instock').checked;
+      const showOutOfStock = document.getElementById('filter-outofstock').checked;
+      
+      const minPriceVal = document.getElementById('filter-min-price').value.trim();
+      const maxPriceVal = document.getElementById('filter-max-price').value.trim();
+      const minPrice = minPriceVal !== '' ? parseFloat(minPriceVal) : 0;
+      const maxPrice = maxPriceVal !== '' ? parseFloat(maxPriceVal) : Infinity;
+
+      const filtered = localProducts.filter(prod => {
+        // Search filter
+        const matchSearch = prod.name.toLowerCase().includes(search) || (prod.sku && prod.sku.toLowerCase().includes(search));
+        
+        // Category filter
+        let matchCategory = activeCategory === 'all';
+        if (!matchCategory) {
+          const cats = typeof prod.categories === 'string' ? JSON.parse(prod.categories) : (prod.categories || []);
+          matchCategory = cats.some(c => c.name === activeCategory);
+        }
+        
+        // Stock status filter
+        const isInstock = prod.stock_status === 'instock';
+        let matchStock = false;
+        if (showInStock && isInstock) matchStock = true;
+        if (showOutOfStock && !isInstock) matchStock = true;
+        
+        // Price filter
+        const itemPrice = prod.price ? parseFloat(prod.price) : 0;
+        const matchPrice = itemPrice >= minPrice && itemPrice <= maxPrice;
+
+        return matchSearch && matchCategory && matchStock && matchPrice;
+      });
+
+      renderProducts(filtered);
+    }
+
+    // Render products list inside grid
+    function renderProducts(productsList) {
+      const grid = document.getElementById('products-grid');
+      const empty = document.getElementById('empty-state');
+      
+      document.getElementById('product-count-display').innerText = productsList.length;
+
+      if (productsList.length === 0) {
+        grid.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('empty-state-desc').innerText = 'ไม่พบสินค้าที่สอดคล้องกับพารามิเตอร์ตรวจสอบประวัติการกรองของคุณ';
+        return;
+      }
+
+      empty.classList.add('hidden');
+      grid.classList.remove('hidden');
+      grid.innerHTML = '';
+
+      productsList.forEach(prod => {
+        const isInstock = prod.stock_status === 'instock';
+        const price = prod.price ? parseFloat(prod.price).toLocaleString() : 'ติดต่อผู้ขาย';
+        
+        // Resolve images array
+        const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : (prod.images || []);
+        const coverSrc = imgs.length > 0 && imgs[0].src ? imgs[0].src : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400';
+
+        const stockBadge = isInstock 
+          ? `<span class="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-450 text-[10px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shrink-0"><i class="fas fa-check-circle"></i> พร้อมส่ง ${prod.stock_quantity ?? 0} เล่ม</span>`
+          : `<span class="bg-stone-100 dark:bg-stone-900/60 text-stone-500 text-[10px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shrink-0"><i class="fas fa-history"></i> คลับสนับสนุน</span>`;
+
+        const card = `
+          <div onclick="openProductModal(${prod.id})" class="bg-white dark:bg-zinc-800 rounded-2xl border border-stone-100 dark:border-zinc-750 p-4 shadow-sm hover:shadow-md cursor-pointer transition flex flex-col justify-between group">
+            <div class="space-y-3">
+              <div class="aspect-[3/4] bg-stone-50 dark:bg-zinc-900 rounded-xl overflow-hidden relative border dark:border-zinc-700 shadow-inner flex items-center justify-center after:content-[''] after:absolute after:top-0 after:left-0 after:bottom-0 after:w-2 after:bg-gradient-to-r after:from-black/15 after:to-transparent after:pointer-events-none">
+                <img src="${coverSrc}" alt="${prod.name}" class="w-full h-full object-cover group-hover:scale-[1.02] transition duration-300">
+                ${prod.sku ? `<span class="absolute top-2 right-2 text-[9px] bg-stone-950/70 text-white font-bold p-1 px-2 rounded-lg backdrop-blur-sm truncate max-w-[125px]">${prod.sku}</span>` : ''}
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between gap-2">
+                  <h4 class="font-bold text-stone-850 dark:text-white line-clamp-1 truncate group-hover:text-primary transition pr-1 text-sm font-bookish">${prod.name}</h4>
+                  ${stockBadge}
+                </div>
+                <p class="text-xs text-stone-400 line-clamp-2">${prod.short_description || prod.description || 'ไม่มีลายแทงย่อสำหรับหนังสือเล่มนี้'}</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-zinc-700 mt-4">
+              <div class="flex items-baseline gap-1">
+                <span class="text-xs text-stone-400">ราคา</span>
+                <span class="text-md font-bold text-primary dark:text-amber-500">${price}</span>
+                ${prod.price ? '<span class="text-[10px] text-stone-450">฿</span>' : ''}
+              </div>
+              <button onclick="event.stopPropagation(); addToCart(${prod.id}, 1)" class="flex items-center gap-1.5 px-3 h-8 bg-primary text-white rounded-lg font-bold text-xs hover:bg-primary-hover transition shadow-sm">
+                <i class="fas fa-cart-plus text-[10px]"></i> เพิ่ม
+              </button>
+            </div>
+          </div>
+        `;
+
+        grid.innerHTML += card;
+      });
+    }
+
+    // Modal Details controls
+    function openProductModal(productId) {
+      const prod = localProducts.find(p => p.id === productId);
+      if (!prod) return;
+
+      const modal = document.getElementById('product-detail-modal');
+      
+      document.getElementById('modal-title').innerText = prod.name;
+      document.getElementById('modal-sku').innerText = prod.sku || 'N/A';
+      document.getElementById('modal-price').innerText = prod.price ? parseFloat(prod.price).toLocaleString() : 'ติดต่อผู้ขาย';
+      document.getElementById('modal-desc').innerHTML = prod.description ? prod.description.replace(/\n/g, '<br>') : 'ไม่มีประวัติตัวหนังสือรายละเอียดสินค้า';
+      
+      document.getElementById('modal-stock-qty').innerText = (prod.stock_quantity !== null && prod.stock_quantity !== undefined) ? `${prod.stock_quantity} ชิ้น` : 'ไม่มีคลังระบุ';
+      
+      const manageStockEl = document.getElementById('modal-manage-stock');
+      if (prod.manage_stock) {
+        manageStockEl.innerText = 'ระบบคุมยอดคลัง';
+        manageStockEl.className = 'text-xs font-bold text-emerald-500';
+      } else {
+        manageStockEl.innerText = 'ไม่ใช้การคุมคลัง';
+        manageStockEl.className = 'text-xs font-bold text-stone-400';
+      }
+
+      // Stock status badge
+      const isInstock = prod.stock_status === 'instock';
+      const badge = document.getElementById('modal-stock-badge');
+      if (isInstock) {
+        badge.innerText = 'พร้อมจัดส่ง (IN STOCK)';
+        badge.className = 'px-2.5 py-0.5 text-[8px] font-bold rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-450';
+      } else {
+        badge.innerText = 'หมดคลังชั่วคราว (OUT OF STOCK)';
+        badge.className = 'px-2.5 py-0.5 text-[8px] font-bold rounded-lg bg-stone-150 text-stone-600 dark:bg-stone-900/60 dark:text-stone-300';
+      }
+
+      // Resolve images
+      const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : (prod.images || []);
+      const mainImg = document.getElementById('modal-img-main');
+      const thumbs = document.getElementById('modal-img-thumbs');
+      
+      thumbs.innerHTML = '';
+
+      if (imgs.length > 0) {
+        mainImg.src = imgs[0].src;
+        imgs.forEach((img, idx) => {
+          const isSelectedClass = idx === 0 ? 'border-2 border-primary' : 'border opacity-60 hover:opacity-100';
+          const thumbHtml = `
+            <div onclick="setMainImage('${img.src}', this)" class="aspect-square bg-stone-50 dark:bg-zinc-900 rounded-lg overflow-hidden cursor-pointer border transition ${isSelectedClass}">
+              <img src="${img.src}" class="w-full h-full object-cover">
+            </div>
+          `;
+          thumbs.innerHTML += thumbHtml;
+        });
+      } else {
+        mainImg.src = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=400';
+      }
+
+      // Dimensions drawer
+      const hasLength = prod.length !== null && prod.length !== undefined && prod.length !== '';
+      const hasWidth = prod.width !== null && prod.width !== undefined && prod.width !== '';
+      const hasHeight = prod.height !== null && prod.height !== undefined && prod.height !== '';
+      const dimContainer = document.getElementById('modal-dimensions-container');
+
+      if (hasLength || hasWidth || hasHeight) {
+        dimContainer.classList.remove('hidden');
+        document.getElementById('modal-len').innerText = hasLength ? `${prod.length} ซม.` : '-';
+        document.getElementById('modal-width').innerText = hasWidth ? `${prod.width} ซม.` : '-';
+        document.getElementById('modal-height').innerText = hasHeight ? `${prod.height} ซม.` : '-';
+      } else {
+        dimContainer.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function setMainImage(src, thumbElement) {
+      document.getElementById('modal-img-main').src = src;
+      const siblingDivs = thumbElement.parentElement.children;
+      for (let div of siblingDivs) {
+        div.className = div.className.replace('border-2 border-primary', 'border opacity-60').replace('opacity-100', '');
+      }
+      thumbElement.className = thumbElement.className.replace('border opacity-60', 'border-2 border-primary opacity-100');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-detail-modal').classList.add('hidden');
+    }
+
+    // ─── CART STATE ───────────────────────────────────────────────────────────
+    function normalizeMoney(value) {
+      if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : 0;
+      }
+
+      if (typeof value === 'string') {
+        const cleaned = value.replace(/,/g, '').trim();
+        const parsed = parseFloat(cleaned);
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+
+      return 0;
+    }
+
+    let cart = JSON.parse(localStorage.getItem('shop_cart') || '[]').map(item => ({
+      ...item,
+      price: normalizeMoney(item.price),
+      qty: Math.max(1, parseInt(item.qty, 10) || 1)
+    }));
+    let currentModalProductId = null;
+
+    function saveCart() { localStorage.setItem('shop_cart', JSON.stringify(cart)); }
+
+    function updateCartBadge() {
+      const total = cart.reduce((s, i) => s + i.qty, 0);
+      const badge = document.getElementById('cart-badge');
+      badge.textContent = total;
+      badge.classList.toggle('hidden', total === 0);
+    }
+
+    function cartTotal() {
+      return cart.reduce((s, i) => s + normalizeMoney(i.price) * (parseInt(i.qty, 10) || 0), 0);
+    }
+
+    function addToCart(productId, qty) {
+      const prod = localProducts.find(p => p.id === productId);
+      if (!prod) return;
+      const price = normalizeMoney(prod.price ?? prod.regular_price ?? prod.sale_price);
+      const existing = cart.find(i => i.productId === productId);
+      if (existing) {
+        existing.qty += qty;
+        existing.price = price;
+      } else {
+        cart.push({ productId, name: prod.name, sku: prod.sku || '', price, qty });
+      }
+      saveCart();
+      updateCartBadge();
+      showToast(`เพิ่ม "${prod.name}" ลงตะกร้าแล้ว`);
+    }
+
+    function addToCartFromModal() {
+      const qty = parseInt(document.getElementById('modal-qty').value) || 1;
+      if (currentModalProductId) addToCart(currentModalProductId, qty);
+      closeProductModal();
+    }
+
+    function changeModalQty(delta) {
+      const input = document.getElementById('modal-qty');
+      input.value = Math.max(1, (parseInt(input.value) || 1) + delta);
+    }
+
+    // ─── CART DRAWER ──────────────────────────────────────────────────────────
+    function openCartDrawer() {
+      renderCartItems();
+      document.getElementById('cart-drawer').style.transform = 'translateX(0)';
+      document.getElementById('cart-overlay').classList.remove('hidden');
+    }
+
+    function closeCartDrawer() {
+      document.getElementById('cart-drawer').style.transform = 'translateX(100%)';
+      document.getElementById('cart-overlay').classList.add('hidden');
+    }
+
+    function renderCartItems() {
+      const list = document.getElementById('cart-items-list');
+      if (cart.length === 0) {
+        list.innerHTML = '<div class="py-16 text-center text-stone-400"><i class="fas fa-shopping-cart text-4xl mb-3 block opacity-30"></i><p class="text-sm">ยังไม่มีสินค้าในตะกร้า</p></div>';
+      } else {
+        list.innerHTML = cart.map((item, idx) => `
+          <div class="flex items-start gap-3 bg-stone-50 dark:bg-zinc-800 rounded-xl p-3">
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm text-stone-800 dark:text-white truncate">${item.name}</p>
+              ${item.sku ? `<p class="text-[10px] text-stone-400">SKU: ${item.sku}</p>` : ''}
+              <p class="text-primary dark:text-amber-500 font-bold text-sm mt-0.5">฿${(item.price * item.qty).toLocaleString()}</p>
+            </div>
+            <div class="flex items-center border border-stone-200 dark:border-zinc-600 rounded-lg overflow-hidden shrink-0">
+              <button onclick="changeCartQty(${idx}, -1)" class="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 dark:hover:bg-zinc-700 font-bold transition">−</button>
+              <span class="w-7 text-center text-xs font-bold text-stone-800 dark:text-white">${item.qty}</span>
+              <button onclick="changeCartQty(${idx}, 1)" class="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 dark:hover:bg-zinc-700 font-bold transition">+</button>
+            </div>
+            <button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 transition text-sm mt-0.5"><i class="fas fa-trash"></i></button>
+          </div>
+        `).join('');
+      }
+      document.getElementById('cart-total-display').textContent = '฿' + cartTotal().toLocaleString();
+    }
+
+    function changeCartQty(idx, delta) {
+      cart[idx].qty = Math.max(1, cart[idx].qty + delta);
+      saveCart(); updateCartBadge(); renderCartItems();
+    }
+
+    function removeFromCart(idx) {
+      cart.splice(idx, 1);
+      saveCart(); updateCartBadge(); renderCartItems();
+    }
+
+    // ─── CHECKOUT ─────────────────────────────────────────────────────────────
+    function openCheckout() {
+      if (cart.length === 0) return;
+      closeCartDrawer();
+      // Render summary
+      document.getElementById('co-summary-items').innerHTML = cart.map(i =>`
+        <div class="flex justify-between text-xs">
+          <span class="text-stone-600 dark:text-stone-400 truncate pr-2">${i.name} x${i.qty}</span>
+          <span class="font-semibold shrink-0">฿${(i.price * i.qty).toLocaleString()}</span>
+        </div>
+      `).join('');
+      document.getElementById('co-total-display').textContent = '฿' + cartTotal().toLocaleString();
+      document.getElementById('checkout-form-section').classList.remove('hidden');
+      document.getElementById('checkout-success-section').classList.add('hidden');
+      document.getElementById('co-error').classList.add('hidden');
+      document.getElementById('checkout-modal').classList.remove('hidden');
+    }
+
+    function closeCheckout() {
+      document.getElementById('checkout-modal').classList.add('hidden');
+    }
+
+    async function submitOrder() {
+      const name    = document.getElementById('co-name').value.trim();
+      const phone   = document.getElementById('co-phone').value.trim();
+      const address = document.getElementById('co-address').value.trim();
+      const note    = document.getElementById('co-note').value.trim();
+      const errEl   = document.getElementById('co-error');
+
+      if (!name || !phone || !address) {
+        errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ (ชื่อ, เบอร์โทร, ที่อยู่)';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!supabaseClient) {
+        errEl.textContent = 'ยังไม่ได้เชื่อมต่อ Supabase กรุณาตั้งค่าก่อน';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const btn = document.getElementById('co-submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งคำสั่งซื้อ...';
+      errEl.classList.add('hidden');
+
+      console.log('Inserting into orders table...', { customer_name: name, customer_phone: phone, customer_address: address, note, total_amount: cartTotal() });
+
+      try {
+        // Insert order
+        const { data: order, error: orderErr } = await supabaseClient
+          .from('orders')
+          .insert({ customer_name: name, customer_phone: phone, customer_address: address, note: note || null, total_amount: cartTotal() })
+          .select()
+          .single();
+
+        if (orderErr) {
+          console.error('Order insert error:', orderErr);
+          throw orderErr;
+        }
+
+        console.log('Order created successfully:', order);
+
+        // Insert order_items
+        const items = cart.map(i => ({
+          order_id: order.id,
+          product_id: i.productId,
+          product_name: i.name,
+          product_sku: i.sku || null,
+          quantity: i.qty,
+          unit_price: i.price
+        }));
+
+        console.log('Inserting order items...', items);
+
+        const { error: itemsErr } = await supabaseClient.from('order_items').insert(items);
+        if (itemsErr) {
+          console.error('Order items insert error:', itemsErr);
+          throw itemsErr;
+        }
+
+        console.log('Order items inserted successfully.');
+
+        // Trigger Edge Function เพื่อซิงค์ไป ZORT ทันทีหลังจากที่บันทึกข้อมูลครบแล้ว
+        // ใช้ vanilla fetch แทน เพื่อเลี่ยงไม่ให้มี header 'x-client-info' จาก SDK ที่บราวเซอร์บางเวอร์ชั่นบล็อก CORS
+        const supabaseUrl = localStorage.getItem('zort_ws_supabase_url');
+        const supabaseKey = localStorage.getItem('zort_ws_supabase_anon_key');
+        
+        if (supabaseUrl && supabaseKey) {
+          fetch(`${supabaseUrl}/functions/v1/order-to-zort`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseKey}`
+            },
+            body: JSON.stringify({ order_id: order.id })
+          })
+          .then(async res => {
+            const text = await res.text();
+            const payload = (() => {
+              try {
+                return JSON.parse(text);
+              } catch (e) {
+                return { text };
+              }
+            })();
+
+            if (!res.ok) {
+              throw new Error(payload?.error || payload?.zort?.resDesc || `HTTP ${res.status}`);
+            }
+
+            return payload;
+          })
+          .then(data => {
+            console.log('ZORT sync response:', data);
+            if (data && data.zort && data.zort.resCode !== '200') {
+              console.error('ZORT API Error details:', data.zort.resDesc);
+            }
+          })
+          .catch(err => {
+            console.error('ZORT sync network error:', err);
+          });
+        } else {
+          console.warn('Missing Supabase URL or anon key. Skipping order-to-zort call.');
+        }
+
+        // Success
+        cart = [];
+        saveCart();
+        updateCartBadge();
+        document.getElementById('co-order-number').textContent = order.order_number || `#${order.id}`;
+        document.getElementById('checkout-form-section').classList.add('hidden');
+        document.getElementById('checkout-success-section').classList.remove('hidden');
+      } catch (err) {
+        console.error('Catch block error:', err);
+        errEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> ยืนยันการสั่งซื้อ';
+      }
+    }
+
+    // ─── TOAST ────────────────────────────────────────────────────────────────
+    function showToast(msg) {
+      let t = document.getElementById('toast-msg');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast-msg';
+        t.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-xl z-[100] transition-opacity duration-300';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+    }
+
+    // ─── PATCH openProductModal to track current product ─────────────────────
+    const _origOpen = openProductModal;
+    openProductModal = function(productId) {
+      currentModalProductId = productId;
+      document.getElementById('modal-qty').value = 1;
+      _origOpen(productId);
+    };
+
+    // Auto load on start
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initSupabase();
+      loadProducts();
+      updateCartBadge();
+    });
+  </script>
+</body>
+</html>
