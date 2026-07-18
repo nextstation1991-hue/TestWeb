@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ร้านหนังสือรัตน์ | Ratt Bookstore</title>
+  <meta name="description" content="ร้านหนังสือออนไลน์ เชื่อมต่อสต็อกจาก Supabase และ ZORT แบบเรียลไทม์">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              light: "#F3E3D0",
+              DEFAULT: "#8C5A34",
+              hover: "#73472B",
+              dark: "#56331D"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --paper: #fcf7ef;
+      --paper-2: #f4e7d6;
+      --ink: #2f2219;
+      --muted: #7b6855;
+      --wood: #8c5a34;
+      --wood-dark: #73472b;
+      --gold: #d7a25f;
+    }
+    body {
+      font-family: "Prompt", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(255, 246, 220, .65), transparent 22%),
+        radial-gradient(circle at left, rgba(226, 179, 112, .16), transparent 35%),
+        linear-gradient(180deg, #fbf1e5 0%, #f6e5d5 100%);
+      color: var(--ink);
+    }
+    .dark body,
+    .dark .page-bg {
+      background:
+        radial-gradient(circle at top right, rgba(225, 179, 108, .16), transparent 25%),
+        linear-gradient(180deg, #1e1510 0%, #120a07 100%);
+    }
+    .page-bg { min-height: 100vh; }
+    .glass-nav {
+      background: rgba(255, 255, 251, .97);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(183, 142, 99, .28);
+      box-shadow: 0 14px 40px rgba(118, 79, 38, .08);
+    }
+    .dark .glass-nav {
+      background: rgba(20, 14, 10, .96);
+      border-bottom-color: rgba(215, 162, 95, .16);
+    }
+    .panel {
+      background: rgba(255, 251, 244, .96);
+      border: 1px solid rgba(194, 151, 104, .18);
+      border-radius: 28px;
+      box-shadow: 0 22px 50px -30px rgba(126, 80, 31, .12);
+      backdrop-filter: blur(10px);
+    }
+    .dark .panel {
+      background: rgba(32, 22, 16, .94);
+      border-color: rgba(218, 164, 106, .12);
+      color: #f4e7d8;
+    }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 40px;
+      background: linear-gradient(135deg, rgba(251, 238, 222, .97) 0%, rgba(245, 227, 204, .96) 40%, rgba(229, 202, 167, .95) 100%);
+      box-shadow: 0 30px 70px rgba(111, 72, 35, .12);
+      border: 1px solid rgba(187, 145, 101, .18);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(135deg, rgba(255,255,255,.85) 24%, transparent 24%), linear-gradient(225deg, rgba(255,255,255,.85) 24%, transparent 24%);
+      background-size: 64px 64px;
+      opacity: .12;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 12% 12%, rgba(255,255,255,.16), transparent 22%), radial-gradient(circle at 88% 18%, rgba(255,255,255,.10), transparent 18%);
+      opacity: .38;
+      pointer-events: none;
+    }
+    .hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(85, 48, 20, .08);
+      border: 1px solid rgba(156, 116, 77, .16);
+      color: #6b4928;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+    }
+    .hero h2 {
+      color: #3d2a1d;
+    }
+    .hero p,
+    .hero .feature-pill,
+    .hero-panel .stat-card p {
+      color: #5d4432;
+    }
+    .hero-panel {
+      background: rgba(255, 251, 244, .98);
+      border: 1px solid rgba(189, 145, 103, .18);
+      backdrop-filter: blur(20px);
+      border-radius: 32px;
+      padding: 28px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.22);
+    }
+    .hero-panel .stat-card {
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(255, 244, 230, .96);
+      border: 1px solid rgba(204, 160, 112, .22);
+      min-height: 76px;
+    }
+    .hero-panel .status-pill {
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(68, 91, 64, .12);
+      color: #34593c;
+      border: 1px solid rgba(88, 125, 96, .22);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 245, 229, .96);
+      color: #63472f;
+      border: 1px solid rgba(191, 148, 102, .24);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .hero-panel {
+      background: rgba(17, 10, 5, .42);
+      border: 1px solid rgba(255, 255, 255, .08);
+      backdrop-filter: blur(24px);
+      border-radius: 32px;
+      padding: 28px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .hero-panel .stat-card {
+      border-radius: 24px;
+      padding: 16px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.08);
+      min-height: 76px;
+    }
+    .hero-panel .stat-card p:last-child {
+      margin-top: .5rem;
+    }
+    .hero-panel .status-pill {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(72, 155, 105, .16);
+      color: #d8f7d8;
+      border: 1px solid rgba(108, 185, 142, .22);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .ico-btn, .cart-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s ease;
+    }
+    .ico-btn {
+      background: #fff;
+      border: 1px solid rgba(140, 90, 52, .14);
+      color: var(--wood);
+    }
+    .ico-btn:hover { transform: translateY(-1px); background: #fff7ef; }
+    .cart-btn {
+      background: linear-gradient(135deg, var(--wood), var(--gold));
+      color: #fff;
+      box-shadow: 0 12px 22px -14px rgba(140, 90, 52, .9);
+    }
+    .cart-btn:hover { transform: translateY(-1px); }
+    .inp {
+      width: 100%;
+      border: 1px solid rgba(160, 119, 72, .20);
+      border-radius: 16px;
+      background: #fff8ee;
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+      transition: all .2s ease;
+      color: #4c3725;
+    }
+    .inp:focus {
+      border-color: rgba(148, 101, 60, .55);
+      box-shadow: 0 0 0 3px rgba(231, 188, 139, .18);
+      background: #fffdf7;
+    }
+    .dark .inp {
+      background: rgba(39, 30, 22, .92);
+      border-color: rgba(215, 162, 95, .14);
+      color: #f5ecdf;
+    }
+    .btn-primary, .btn-success, .btn-add {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s ease;
+      padding: 0.9rem 1.4rem;
+    }
+    .btn-primary, .btn-add {
+      background: linear-gradient(135deg, #9b6b3f, #b37e45);
+      color: #fff;
+      box-shadow: 0 18px 34px -20px rgba(141, 83, 36, .24);
+    }
+    .btn-primary:hover, .btn-add:hover, .btn-success:hover { transform: translateY(-1px); }
+    .btn-success {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff;
+      box-shadow: 0 14px 24px -18px rgba(22, 163, 74, .95);
+    }
+    .book-grid {
+      background-image: radial-gradient(rgba(140, 90, 52, .05) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .book-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(252,247,239,.96) 100%);
+      border: 1px solid rgba(140, 90, 52, .10);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 18px 38px -28px rgba(93, 61, 32, .36);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      position: relative;
+      cursor: pointer;
+    }
+    .book-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(140, 90, 52, .24);
+      box-shadow: 0 26px 44px -26px rgba(93, 61, 32, .42);
+    }
+    .dark .book-card {
+      background: linear-gradient(180deg, rgba(32, 24, 18, .98) 0%, rgba(21, 16, 13, .98) 100%);
+      border-color: rgba(215, 162, 95, .14);
+    }
+    .card-img {
+      aspect-ratio: 5 / 4;
+      background: linear-gradient(135deg, #f4dfc3, #fff9f0);
+      overflow: hidden;
+    }
+    .dark .card-img { background: linear-gradient(135deg, #2a1f17, #1a130e); }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .28s ease;
+    }
+    .book-card:hover .card-img img { transform: scale(1.03); }
+    .badge-ok, .badge-no {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .badge-ok { background: rgba(22, 163, 74, .12); color: #15803d; }
+    .badge-no { background: rgba(120, 113, 108, .12); color: #6b7280; }
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 3px solid rgba(140, 90, 52, .12);
+      border-top-color: var(--wood);
+      border-radius: 999px;
+      animation: spin .75s linear infinite;
+    }
+    .mwrap {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(18, 12, 8, .62);
+      backdrop-filter: blur(8px);
+    }
+    .mbox {
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+      background: #fffaf4;
+      border: 1px solid rgba(140, 90, 52, .12);
+      border-radius: 26px;
+      box-shadow: 0 26px 70px -34px rgba(35, 21, 11, .5);
+    }
+    .dark .mbox {
+      background: #1b140f;
+      border-color: rgba(215, 162, 95, .14);
+      color: #f5ecdf;
+    }
+    .mclose {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(140, 90, 52, .08);
+      color: var(--muted);
+    }
+    .book-cart-drawer {
+      background: #fffaf4;
+      border-left: 1px solid rgba(140, 90, 52, .10);
+    }
+    .dark .book-cart-drawer { background: #1b140f; }
+    .site-footer {
+      background: linear-gradient(135deg, #16131a, #101827);
+      color: rgba(244, 232, 214, .6);
+      border-top: 1px solid rgba(215, 162, 95, .10);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .anim-up { animation: fadeUp .3s ease both; }
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #f8e4c7;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(10px);
+    }
+    .hero-panel {
+      background: rgba(255, 245, 232, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 20px 45px rgba(0, 0, 0, 0.16);
+      backdrop-filter: blur(16px);
+    }
+    .hero-panel .stat-card {
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+    .catalog-highlight {
+      background: linear-gradient(135deg, rgba(255, 248, 240, 0.95), rgba(248, 233, 214, 0.95));
+      border: 1px solid rgba(140, 90, 52, 0.10);
+      box-shadow: 0 16px 36px -24px rgba(92, 58, 28, 0.45);
+    }
+    .dark .catalog-highlight {
+      background: linear-gradient(135deg, rgba(37, 28, 20, 0.96), rgba(27, 20, 15, 0.96));
+      border-color: rgba(215, 162, 95, 0.10);
+    }
+    .soft-ring {
+      box-shadow: inset 0 0 0 1px rgba(140, 90, 52, 0.10);
+    }
+  </style>
+</head>
+<body class="page-bg min-h-screen flex flex-col text-stone-800 dark:text-stone-100 transition-colors duration-200">
+  <header class="glass-nav sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-br from-amber-600 via-orange-500 to-amber-400 shadow-xl shadow-amber-700/25 border border-amber-200/20">
+          <i class="fas fa-book-open text-amber-50"></i>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-base font-extrabold tracking-tight text-stone-900 dark:text-stone-100">ร้านหนังสือรัตน์</h1>
+          <p class="text-[10px] text-stone-500 dark:text-stone-400 font-semibold tracking-wide">Realtime Stock · Supabase · ZORT Integration</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="config-btn" onclick="openConfigModal()" class="ico-btn" title="ตั้งค่าการเชื่อมต่อ"><i class="fas fa-cog text-sm"></i></button>
+        <button id="theme-toggle-btn" onclick="toggleTheme()" class="ico-btn" title="เปลี่ยนธีม">
+          <i class="fas fa-moon text-sm dark:hidden"></i>
+          <i class="fas fa-sun text-sm hidden dark:block text-amber-300"></i>
+        </button>
+        <button onclick="openCartDrawer()" class="cart-btn" title="ตะกร้าสินค้า">
+          <i class="fas fa-shopping-bag text-sm"></i>
+          <span id="cart-badge" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero text-white max-w-6xl mx-4 md:mx-auto mt-6 px-6 sm:px-10 py-14 sm:py-16">
+    <div class="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+      <div class="space-y-4 max-w-2xl">
+        <span class="hero-chip"><i class="fas fa-star text-[9px]"></i> Premium Book Storefront</span>
+        <div>
+          <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">ร้านหนังสือรัตน์</h2>
+          <p class="text-amber-300 italic text-3xl mt-1" style="font-family:'Playfair Display',serif">Ratt Bookstore</p>
+        </div>
+        <p class="text-amber-50/85 text-sm leading-7 max-w-xl">เลือกซื้อหนังสือที่คุณชื่นชอบได้อย่างง่ายดาย พร้อมระบบค้นหา ตะกร้าสินค้า และการอัปเดตสต็อกจาก ZORT แบบเรียลไทม์</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="feature-pill"><i class="fas fa-bolt"></i> อัปเดตสต็อกแบบเรียลไทม์</span>
+          <span class="feature-pill"><i class="fas fa-shield-alt"></i> สั่งซื้อสะดวกและปลอดภัย</span>
+          <span class="feature-pill"><i class="fas fa-truck-fast"></i> คัดส่งเร็วทันที</span>
+        </div>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <button onclick="scrollToCatalog()" class="btn-primary px-5 py-3 text-sm">เลือกซื้อหนังสือเลย</button>
+          <button onclick="openConfigModal()" class="bg-white/12 border border-white/15 rounded-2xl px-5 py-3 text-sm font-bold backdrop-blur-sm hover:bg-white/20 transition">ตั้งค่าการเชื่อมต่อ</button>
+        </div>
+      </div>
+      <div class="w-full max-w-md">
+        <div class="hero-panel">
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[10px] uppercase tracking-[0.22em] text-amber-200 font-bold">Store status</p>
+                <p class="text-sm font-semibold text-white mt-1">ภาพรวมร้านพร้อมให้บริการ</p>
+              </div>
+              <div class="status-pill">เชื่อมต่อสำเร็จ</div>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="stat-card">
+                <p class="text-[10px] uppercase tracking-[0.16em] text-amber-200 font-bold">ค้นหา</p>
+                <p class="text-sm font-semibold text-white mt-1">ค้นหาหนังสือได้ทุกหมวด</p>
+              </div>
+              <div class="stat-card">
+                <p class="text-[10px] uppercase tracking-[0.16em] text-amber-200 font-bold">ชำระเงิน</p>
+                <p class="text-sm font-semibold text-white mt-1">COD / PromptPay พร้อมรับสลิป</p>
+              </div>
+              <div class="stat-card sm:col-span-2">
+                <p class="text-[10px] uppercase tracking-[0.16em] text-amber-200 font-bold">การเชื่อมต่อ</p>
+                <p class="text-sm font-semibold text-white mt-1">Supabase + ZORT ทำงานร่วมกันอย่างเรียลไทม์</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-6xl mx-4 md:mx-auto mt-6">
+    <div class="catalog-highlight panel p-4 md:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500 dark:text-stone-400">Experience</p>
+        <h3 class="font-extrabold text-stone-900 dark:text-stone-100 mt-1">ร้านหนังสือที่ออกแบบให้ค้นหาและสั่งซื้อง่ายขึ้น</h3>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="soft-ring rounded-full px-3 py-2 text-[11px] font-bold text-stone-700 dark:text-stone-300 bg-white/70 dark:bg-stone-900/60">📚 คอลเลกชันครบถ้วน</span>
+        <span class="soft-ring rounded-full px-3 py-2 text-[11px] font-bold text-stone-700 dark:text-stone-300 bg-white/70 dark:bg-stone-900/60">⚡ รีวิวสินค้าแบบทันที</span>
+        <span class="soft-ring rounded-full px-3 py-2 text-[11px] font-bold text-stone-700 dark:text-stone-300 bg-white/70 dark:bg-stone-900/60">🧾 สั่งซื้อและชำระเงินครบ</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8 flex flex-col md:flex-row gap-6">
+    <aside class="w-full md:w-64 shrink-0 lg:sticky lg:top-24 self-start">
+      <div class="panel p-5 space-y-6">
+        <div>
+          <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">ค้นหาหนังสือ</label>
+          <div class="relative">
+            <input type="text" id="search-input" oninput="filterProducts()" placeholder="ชื่อเรื่อง / ISBN..." class="inp pl-10 text-sm">
+            <i class="fas fa-search absolute left-3.5 top-3.5 text-stone-400 text-xs"></i>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">หมวดหมู่หนังสือ</label>
+          <div class="flex flex-col gap-1.5" id="category-filter-list">
+            <button onclick="selectCategory('all')" id="cat-btn-all" class="text-left py-2.5 px-3 text-xs font-bold rounded-xl w-full transition duration-200 flex items-center justify-between border bg-gradient-to-r from-primary/10 to-orange-100 border-primary/20 text-primary">
+              <span class="flex items-center gap-2"><i class="fas fa-border-all text-[11px] opacity-70"></i> ทั้งหมด</span>
+              <span class="text-[10px] bg-stone-100 font-bold px-2 py-0.5 rounded-lg text-stone-500" id="cat-count-all">0</span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">สถานะสต็อก</label>
+          <div class="space-y-3 text-xs font-bold text-stone-600 dark:text-stone-300">
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" id="filter-instock" checked onchange="filterProducts()" class="w-4 h-4 accent-primary">
+              <span>พร้อมสั่งซื้อ</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" id="filter-outofstock" checked onchange="filterProducts()" class="w-4 h-4 accent-primary">
+              <span>หมดชั่วคราว</span>
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">ช่วงราคา (บาท)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="filter-min-price" min="0" oninput="filterProducts()" placeholder="ต่ำสุด" class="inp text-xs p-2.5 text-center">
+            <input type="number" id="filter-max-price" min="0" oninput="filterProducts()" placeholder="สูงสุด" class="inp text-xs p-2.5 text-center">
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section id="catalog-section" class="flex-grow min-w-0">
+      <div class="panel flex items-center justify-between px-5 py-3.5 mb-5">
+        <p class="text-xs font-bold text-stone-500">
+          <span id="product-count-display" class="text-2xl font-black text-stone-900 dark:text-amber-300 font-sans">0</span>
+          <span class="ml-1 tracking-wide">รายการหนังสือ</span>
+        </p>
+        <button onclick="loadProducts()" class="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-white hover:bg-primary border border-primary/20 rounded-xl px-4 py-2 shadow-sm transition-all duration-200">
+          <i class="fas fa-rotate-right text-[10px]"></i> รีเฟรช
+        </button>
+      </div>
+
+      <div id="loading-spinner" class="py-24 flex flex-col items-center gap-4 animate-pulse">
+        <div class="spinner"></div>
+        <p class="text-xs text-stone-400 font-semibold tracking-wide">กำลังเชื่อมต่อฐานข้อมูล...</p>
+      </div>
+
+      <div id="empty-state" class="panel hidden p-16 text-center space-y-4">
+        <div class="w-20 h-20 bg-gradient-to-br from-primary/10 to-amber-100 dark:from-amber-900/30 dark:to-stone-800 rounded-full mx-auto flex items-center justify-center text-primary dark:text-amber-300 shadow-inner">
+          <i class="fas fa-book-open text-2xl"></i>
+        </div>
+        <div class="space-y-2">
+          <h4 class="font-bold text-stone-900 dark:text-stone-100">ยังไม่มีหนังสือพร้อมแสดงในตอนนี้</h4>
+          <p class="text-xs text-stone-400 max-w-sm mx-auto" id="empty-state-desc">ยังไม่มีรายการหนังสือ หรือยังไม่ได้ตั้งค่าการเชื่อมต่อของเว็บไซต์เข้ากับฐานข้อมูล</p>
+        </div>
+        <button onclick="openConfigModal()" class="btn-primary px-5 py-2.5 text-xs">ตั้งค่าการเชื่อมต่อ</button>
+      </div>
+
+      <div id="products-grid" class="book-grid rounded-[24px] p-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+    </section>
+  </main>
+
+  <dialog id="product-detail-modal" class="mwrap hidden w-full h-full">
+    <div class="mbox max-w-2xl anim-up">
+      <button onclick="closeProductModal()" class="mclose"><i class="fas fa-times"></i></button>
+      <div class="flex flex-col md:flex-row">
+        <div class="w-full md:w-2/5 p-5 flex flex-col gap-3 shrink-0">
+          <div class="rounded-2xl overflow-hidden border border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-900" style="aspect-ratio:3/4">
+            <img id="modal-img-main" src="" alt="Book Cover" class="w-full h-full object-cover">
+          </div>
+          <div id="modal-img-thumbs" class="grid grid-cols-4 gap-2"></div>
+        </div>
+        <div class="flex-1 p-6 space-y-4">
+          <div>
+            <span id="modal-stock-badge" class="inline-block text-[9px] font-bold px-2.5 py-1 rounded-lg mb-1"></span>
+            <h2 id="modal-title" class="font-extrabold text-xl text-stone-900 dark:text-stone-100 leading-snug"></h2>
+            <p class="text-xs text-stone-400 mt-1">ISBN / SKU: <code id="modal-sku" class="font-bold text-stone-600 dark:text-stone-300"></code></p>
+          </div>
+          <div class="flex items-baseline gap-2 py-3 border-y border-stone-100 dark:border-stone-800">
+            <span class="text-xs text-stone-400 font-semibold">ราคา</span>
+            <span id="modal-price" class="text-2xl font-black text-primary dark:text-amber-300"></span>
+            <span class="text-xs text-stone-400">บาท</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-stone-50 dark:bg-stone-900 p-3 rounded-xl border border-stone-100 dark:border-stone-800/80 text-center">
+              <p class="text-[10px] text-stone-400 uppercase font-bold tracking-wide">คงเหลือ</p>
+              <p id="modal-stock-qty" class="font-bold text-base mt-1 text-stone-800 dark:text-white"></p>
+            </div>
+            <div class="bg-stone-50 dark:bg-stone-900 p-3 rounded-xl border border-stone-100 dark:border-stone-800/80 text-center">
+              <p class="text-[10px] text-stone-400 uppercase font-bold tracking-wide">สถานะซิงก์</p>
+              <p id="modal-manage-stock" class="font-bold text-xs mt-1 text-stone-800 dark:text-white"></p>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1.5">รายละเอียด</p>
+            <div id="modal-desc" class="text-xs text-stone-500 dark:text-stone-300 max-h-28 overflow-y-auto leading-relaxed"></div>
+          </div>
+          <div id="modal-dimensions-container" class="hidden">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1.5">ขนาดกล่อง (ซม.)</p>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-stone-50 dark:bg-stone-900 p-2 rounded-lg border border-stone-100 dark:border-stone-800/80"><p class="text-[9px] text-stone-400 font-semibold">ยาว</p><p id="modal-len" class="font-bold"></p></div>
+              <div class="bg-stone-50 dark:bg-stone-900 p-2 rounded-lg border border-stone-100 dark:border-stone-800/80"><p class="text-[9px] text-stone-400 font-semibold">กว้าง</p><p id="modal-width" class="font-bold"></p></div>
+              <div class="bg-stone-50 dark:bg-stone-900 p-2 rounded-lg border border-stone-100 dark:border-stone-800/80"><p class="text-[9px] text-stone-400 font-semibold">สูง</p><p id="modal-height" class="font-bold"></p></div>
+            </div>
+          </div>
+          <div class="flex gap-3 pt-1">
+            <div class="flex items-center border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-850 rounded-xl overflow-hidden shrink-0">
+              <button id="modal-qty-decrease" onclick="changeModalQty(-1)" class="w-9 h-10 flex items-center justify-center text-stone-500 hover:bg-stone-100 font-bold text-base transition">−</button>
+              <input type="number" id="modal-qty" value="1" min="1" oninput="validateModalQty()" class="w-12 h-10 text-center text-sm font-bold bg-transparent border-0 focus:outline-none text-stone-800 dark:text-white">
+              <button id="modal-qty-increase" onclick="changeModalQty(1)" class="w-9 h-10 flex items-center justify-center text-stone-500 hover:bg-stone-100 font-bold text-base transition">+</button>
+            </div>
+            <button id="modal-add-to-cart" onclick="addToCartFromModal()" class="btn-primary flex-1 px-4 py-3 text-sm"><i class="fas fa-cart-plus mr-1"></i> เพิ่มลงตะกร้า</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="config-modal" class="mwrap hidden w-full h-full">
+    <div class="mbox max-w-md p-7 anim-up">
+      <button onclick="closeConfigModal()" class="mclose"><i class="fas fa-times"></i></button>
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-stone-100 dark:border-stone-800">
+        <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+          <i class="fas fa-database text-primary dark:text-amber-300"></i>
+        </div>
+        <h3 class="font-bold text-stone-900 dark:text-stone-100">เชื่อมต่อ Supabase</h3>
+      </div>
+      <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed mb-5">ระบุ URL และ Anon Key ของ Supabase เพื่อดึงรายการหนังสือและบันทึกคำสั่งซื้อ</p>
+      <div class="space-y-4 text-xs font-bold text-stone-700 dark:text-stone-300">
+        <div>
+          <label class="block mb-1.5" for="db-url">Supabase URL</label>
+          <input type="text" id="db-url" placeholder="https://xxxxxxxxx.supabase.co" class="inp">
+        </div>
+        <div>
+          <label class="block mb-1.5" for="db-key">Supabase Public Anon Key</label>
+          <input type="text" id="db-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXV..." class="inp font-mono">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6 pt-5 border-t border-stone-100 dark:border-stone-800">
+        <button onclick="closeConfigModal()" class="px-4 py-2.5 text-xs font-bold border border-stone-200 rounded-xl transition hover:bg-stone-50 text-stone-700 dark:text-stone-300">ยกเลิก</button>
+        <button onclick="saveConfig()" class="btn-primary px-5 py-2.5 text-xs">บันทึกและเชื่อมต่อ</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="cart-overlay" onclick="closeCartDrawer()" class="fixed inset-0 bg-stone-950/50 backdrop-blur-sm z-40 hidden"></div>
+  <aside id="cart-drawer" class="book-cart-drawer fixed top-0 right-0 h-full w-full sm:w-96 z-50 shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-stone-800">
+      <h2 class="font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
+        <i class="fas fa-shopping-bag text-primary dark:text-amber-300"></i> ตะกร้าสินค้าของคุณ
+      </h2>
+      <button onclick="closeCartDrawer()" class="text-stone-400 hover:text-stone-700 transition text-xl"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="cart-items-list" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+    <div class="border-t border-stone-100 dark:border-stone-800 px-5 py-5 space-y-4 bg-stone-50/60 dark:bg-stone-900/40">
+      <div class="flex justify-between text-sm font-bold">
+        <span class="text-stone-500 dark:text-stone-400">ยอดรวมทั้งหมด</span>
+        <span class="text-primary dark:text-amber-300 text-xl" id="cart-total-display">฿0</span>
+      </div>
+      <button onclick="openCheckout()" id="checkout-btn" class="btn-primary w-full py-3.5 text-xs font-bold text-center">
+        <i class="fas fa-credit-card mr-1"></i> สั่งซื้อสินค้าเลย
+      </button>
+    </div>
+  </aside>
+
+  <div id="checkout-modal" class="mwrap hidden">
+    <div class="mbox max-w-lg p-7 anim-up">
+      <button onclick="closeCheckout()" class="mclose"><i class="fas fa-times"></i></button>
+      <div id="checkout-form-section">
+        <h2 class="font-extrabold text-xl text-stone-900 dark:text-stone-100 mb-6 flex items-center gap-3">
+          <i class="fas fa-receipt text-primary dark:text-amber-300"></i> ข้อมูลการสั่งซื้อสินค้า
+        </h2>
+        <div class="space-y-3.5 text-xs font-bold text-stone-700 dark:text-stone-300">
+          <div>
+            <label class="block mb-1.5">ชื่อ-นามสกุลผู้รับ *</label>
+            <input id="co-name" type="text" placeholder="กรอกชื่อ-นามสกุล" class="inp">
+          </div>
+          <div>
+            <label class="block mb-1.5">เบอร์โทรศัพท์ *</label>
+            <input id="co-phone" type="tel" placeholder="08x-xxx-xxxx" class="inp">
+          </div>
+          <div>
+            <label class="block mb-1.5">ที่อยู่จัดส่ง *</label>
+            <textarea id="co-address" rows="3" placeholder="บ้านเลขที่ / ถนน / ตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์" class="inp resize-none"></textarea>
+          </div>
+          <div>
+            <label class="block mb-1.5">หมายเหตุถึงร้านค้า (ถ้ามี)</label>
+            <input id="co-note" type="text" placeholder="แจ้งเพิ่มเติมถึงทางร้าน" class="inp">
+          </div>
+          <div>
+            <label class="block mb-2.5">ช่องทางชำระเงิน *</label>
+            <div class="space-y-2">
+              <label class="flex items-start gap-3 p-3 rounded-xl border border-stone-200 dark:border-stone-800 cursor-pointer hover:border-primary/50 transition">
+                <input type="radio" name="co-payment-method" value="cod" checked onchange="updateCheckoutPaymentUI()" class="mt-0.5 text-primary accent-primary w-4 h-4">
+                <span>
+                  <span class="block font-bold text-stone-800 dark:text-stone-100">เก็บเงินปลายทาง (COD)</span>
+                  <span class="block text-[11px] text-stone-400 font-medium mt-0.5">ชำระเงินเมื่อได้รับสินค้า</span>
+                </span>
+              </label>
+              <label class="flex items-start gap-3 p-3 rounded-xl border border-stone-200 dark:border-stone-800 cursor-pointer hover:border-primary/50 transition">
+                <input type="radio" name="co-payment-method" value="promptpay" onchange="updateCheckoutPaymentUI()" class="mt-0.5 text-primary accent-primary w-4 h-4">
+                <span>
+                  <span class="block font-bold text-stone-800 dark:text-stone-100">พร้อมเพย์ (PromptPay)</span>
+                  <span class="block text-[11px] text-stone-400 font-medium mt-0.5">สแกนจ่ายเพื่อความรวดเร็วในการจัดส่ง</span>
+                </span>
+              </label>
+            </div>
+          </div>
+          <div id="co-promptpay-box" class="hidden rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/25 p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">PromptPay เบอร์ร้าน</p>
+                <p class="font-black text-xl text-stone-900 dark:text-white mt-0.5 font-sans">062-193-4749</p>
+              </div>
+              <div class="text-right">
+                <p class="text-[10px] text-stone-500 dark:text-stone-400 font-semibold">ยอดโอนสุทธิ</p>
+                <p id="co-promptpay-total" class="font-black text-xl text-primary dark:text-amber-300">฿0</p>
+              </div>
+            </div>
+            <p class="text-[11px] text-stone-600 dark:text-stone-300 font-medium leading-relaxed">หลังโอนเงินเรียบร้อยแล้วกรุณาแนบภาพหลักฐานสลิปการโอนเงินด้านล่าง</p>
+            <label for="co-payment-slip" class="block cursor-pointer rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-stone-900/60 p-4 text-center hover:border-primary transition duration-200">
+              <span class="block font-bold text-stone-800 dark:text-stone-100"><i class="fas fa-file-arrow-up text-primary mr-1"></i> แนบภาพหลักฐานสลิปการโอน *</span>
+              <span class="block text-[10px] text-stone-400 font-medium mt-1">JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB</span>
+              <input id="co-payment-slip" type="file" accept="image/jpeg,image/png,image/webp" onchange="handlePaymentSlipChange(event)" class="sr-only">
+            </label>
+            <div id="co-payment-slip-preview" class="hidden items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-white dark:bg-stone-900 p-3">
+              <img id="co-payment-slip-image" alt="สลิป" class="h-14 w-14 rounded-lg border border-stone-200 object-cover">
+              <div class="min-w-0 flex-1">
+                <p id="co-payment-slip-name" class="truncate text-xs font-bold text-stone-800 dark:text-stone-100"></p>
+                <p id="co-payment-slip-size" class="text-[10px] text-stone-400 font-semibold"></p>
+              </div>
+              <button type="button" onclick="clearPaymentSlip()" class="h-8 w-8 rounded-lg border border-rose-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center transition">
+                <i class="fas fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-xl p-4 space-y-2 text-xs">
+          <p class="font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest text-[9px]">สรุปรายละเอียดคำสั่งซื้อ</p>
+          <div id="co-summary-items" class="space-y-2"></div>
+          <div class="border-t border-stone-200 dark:border-stone-800 pt-2.5 flex justify-between font-extrabold text-sm text-stone-800 dark:text-stone-100">
+            <span>ยอดรวมค่าสินค้า</span>
+            <span class="text-primary dark:text-amber-300" id="co-total-display">฿0</span>
+          </div>
+        </div>
+        <p id="co-error" class="text-rose-500 text-xs mt-2.5 hidden font-bold"></p>
+        <button onclick="submitOrder()" id="co-submit-btn" class="btn-success mt-5 w-full py-3.5 text-xs font-bold text-center">
+          <i class="fas fa-check-circle mr-1"></i> ยืนยันการสั่งซื้อสินค้า
+        </button>
+      </div>
+      <div id="checkout-success-section" class="hidden text-center py-10 space-y-4">
+        <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 rounded-full mx-auto flex items-center justify-center animate-bounce">
+          <i class="fas fa-check text-emerald-600 dark:text-emerald-400 text-2xl"></i>
+        </div>
+        <h3 class="font-bold text-xl text-stone-900 dark:text-stone-100">ทำการสั่งซื้อสำเร็จ!</h3>
+        <p class="text-stone-500 dark:text-stone-400 text-xs font-semibold">หมายเลขคำสั่งซื้อของคุณ</p>
+        <p id="co-order-number" class="font-black text-primary dark:text-amber-300 text-2xl font-sans"></p>
+        <p id="co-success-payment-note" class="text-xs font-bold text-amber-700 dark:text-amber-400"></p>
+        <p class="text-[11px] text-stone-400 mt-2 font-medium">ทางร้านจะติดต่อกลับเพื่อยืนยันรายการโดยเร็วที่สุด</p>
+        <button onclick="closeCheckout()" class="btn-primary px-8 py-3.5 mt-4 text-xs font-bold">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer py-10 text-center text-xs mt-auto">
+    <div class="max-w-6xl mx-auto px-4 space-y-2">
+      <p class="text-amber-200/40 uppercase tracking-[.2em] text-[10px] font-bold">Ratt Bookstore</p>
+      <p>© 2026 ร้านหนังสือรัตน์ · ระบบเชื่อมต่อ Supabase และ ZORT ERP</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
